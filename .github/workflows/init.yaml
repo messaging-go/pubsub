@@ -1,0 +1,33 @@
+name: Init
+
+on:
+  push:
+    branches:
+      - main
+permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  init:
+    if: github.repository != 'messaging-go/integration-template'
+    runs-on: ubuntu-22.04
+    name: rename project files
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - run: |
+          .github/init.sh ${{github.event.repository.name}}
+          rm -f .github/init.sh
+      - uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          token: '${{ secrets.GH_TOKEN }}'
+          commit-message: 'chore(project): rename project modules'
+          branch: 'create-pull-request/patch'
+          title: 'chore(project): rename project modules'

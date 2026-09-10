@@ -1,0 +1,88 @@
+name: "Sync From Integration Template"
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: github.repository != 'messaging-go/integration-template'
+    name: sync files
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: cyberhck/action-sync-templates@v0.0.13
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          template-repo: 'messaging-go/integration-template'
+          # Head branch for the sync PR. `protect synced files` (do-not-change.yaml)
+          # keys off this exact value to allow synced files to change only here.
+          target-branch: 'automated_sync'
+          commit-message: 'chore: sync files from template'
+          pr-body: |
+            ## 🔄 Template Sync
+
+            This pull request was opened automatically by the **Sync From Integration Template**
+            workflow. It brings this repository back in line with
+            [`messaging-go/integration-template`](https://github.com/messaging-go/integration-template),
+            the single source of truth for shared tooling, CI, and repository conventions
+            across every messaging-go integration.
+
+            ---
+
+            ### 📦 What's in this PR
+
+            Only files tracked in [`.github/.synced-files.json`](.github/.synced-files.json)
+            are touched. These typically include:
+
+            | Area | Examples |
+            | --- | --- |
+            | CI / automation | `.github/workflows/*.yaml` |
+            | Contributor docs | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue & PR templates |
+            | Lint / quality gates | `.golangci.json`, `sonar-project.properties` |
+            | Release tooling | `release.config.js` |
+            | Project hygiene | `.gitignore`, `LICENSE` |
+
+            The exact set of changes for this run is in the **Files changed** tab above.
+            Nothing outside the tracked list — application code, `go.mod`, service
+            configuration — is modified.
+
+            ### ❓ Why this matters
+
+            Keeping the template in sync means every integration shares the same build
+            pipeline, security policy, lint rules, and release process. Drift between
+            repositories is the usual cause of "works in repo A, breaks in repo B" issues,
+            so merging these updates promptly keeps maintenance cost low for everyone.
+
+            ---
+
+            ### ✅ Reviewer checklist
+
+            - [ ] CI is green on this branch
+            - [ ] The diff only contains files listed in `.github/.synced-files.json`
+            - [ ] No repository-specific customization was overwritten (see note below)
+            - [ ] Any workflow or tooling changes are compatible with this repo's setup
+
+            ### ⚠️ If you have local customizations
+
+            This sync overwrites tracked files with the template version. If your repo
+            intentionally diverges from the template for one of these files, either:
+
+            1. Push the customization **upstream** into the template so all repos benefit, or
+            2. Remove that path from `.github/.synced-files.json` (and remove the self syncing as well) so it is no longer synced.
+
+            Then re-run the workflow to refresh this PR.
+
+            ---
+
+            ### 🚀 Merging
+
+            If the checklist above passes, this PR is safe to **squash and merge** as-is —
+            no further changes are required. Use the `chore:` prefix on the merge commit so
+            it is excluded from the release notes.
+
+            <sub>🤖 Automated by [`cyberhck/action-sync-templates`](https://github.com/cyberhck/action-sync-templates).
+            Questions about template policy belong in the template repo.</sub>

@@ -1,0 +1,73 @@
+name: Build
+permissions:
+  checks: write
+  pull-requests: write
+  issues: write
+  statuses: write
+  contents: write
+  packages: write
+  attestations: write
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose up -d --wait
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go mod download
+      - run: make generate
+      - run: go test -tags=integration ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+      - name: sonarcloud-scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  lint:
+    name: Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go mod download
+      - run: make generate
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          install-mode: 'binary'
+          version: latest
+
+  release:
+    name: Semantic Release
+    runs-on: ubuntu-22.04
+    needs: [test, lint]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: v22.17.1
+      - name: setup golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Download Go modules
+        run: go mod download
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          semantic_version: 24.2.7
+          extra_plugins: |
+            @semantic-release/git@10.0.1
+            @semantic-release/exec@7.1.0
+            @semantic-release/changelog@6.0.3

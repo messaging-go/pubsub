@@ -1,0 +1,3 @@
+services:
+  dummy: # you should change this according to your need. If you need pubsub, use emulator to start pubsub, etc
+    image: registry.k8s.io/pause:3.9

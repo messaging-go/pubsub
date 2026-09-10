@@ -1,0 +1,85 @@
+name: protect synced files
+on:
+  - pull_request
+  - merge_group
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect_changes:
+    if: github.repository != 'messaging-go/integration-template'
+    runs-on: ubuntu-22.04
+    name: Fail If Mutating
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: find synced files list
+        id: synced-files
+        run: |
+          FILES=$(jq -r '.files[]' .github/.synced-files.json)
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files/@v47.0.6
+        with:
+          files: |
+            ${{ steps.synced-files.outputs.list }}
+      - uses: marocchino/sticky-pull-request-comment@v3
+        # Warn on any PR that modifies synced files, EXCEPT the automated sync PR
+        # itself. That PR is opened by sync.yaml from the `automated_sync` head
+        # branch (see its `target-branch` input) and is the one place these files
+        # are allowed to change. `github.head_ref` is the PR's source branch.
+        if: >-
+          always()
+          && steps.changed-files.outputs.modified_files_count != 0
+          && github.head_ref != 'automated_sync'
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          header: 'changed-files'
+          message: |
+            > [!CAUTION]
+            > ## :no_entry: This PR modifies files that are managed by the template
+
+            The following files are synchronized automatically from the central
+            template repository
+            [`messaging-go/integration-template`](https://github.com/messaging-go/integration-template)
+            and **must not be edited directly in this repository**:
+
+            ```
+            ${{ steps.changed-files.outputs.modified_files }}
+            ```
+
+            ### Why this check exists
+
+            These files are the shared contract for every messaging-go integration —
+            CI pipelines, lint and security gates, release tooling, and contributor
+            docs. Editing them here causes the repositories to drift apart, and your
+            change will be silently overwritten the next time the sync job runs.
+
+            ### How to resolve this
+
+            1. **Revert** the listed files in this PR so the diff no longer touches
+               them (`git checkout origin/${{ github.base_ref }} -- <file>`).
+            2. If the change is genuinely needed, open a PR against
+               [`messaging-go/integration-template`](https://github.com/messaging-go/integration-template)
+               instead. Once merged there, it will sync to every integration,
+               including this one.
+            3. If a file should no longer be managed centrally, remove it from
+               `.github/.synced-files.json` (and remove the self syncing as well) in the template repo.
+
+            This check will clear automatically once the listed files are reverted.
+            Thanks for keeping the integrations consistent. :pray:
+      - if: ${{ steps.changed-files.outputs.modified_files_count == 0 || github.head_ref == 'automated_sync' }}
+        uses: marocchino/sticky-pull-request-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          header: 'changed-files'
+          delete: 'true'

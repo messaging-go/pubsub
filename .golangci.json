@@ -1,0 +1,130 @@
+{
+  "version": "2",
+  "linters": {
+    "enable": [
+      "asciicheck",
+      "bidichk",
+      "bodyclose",
+      "canonicalheader",
+      "contextcheck",
+      "copyloopvar",
+      "cyclop",
+      "decorder",
+      "dogsled",
+      "dupl",
+      "dupword",
+      "durationcheck",
+      "embeddedstructfieldcheck",
+      "errorlint",
+      "errcheck",
+      "errname",
+      "errorlint",
+      "exptostd",
+      "forcetypeassert",
+      "funcorder",
+      "funlen",
+      "gocheckcompilerdirectives",
+      "gochecknoglobals",
+      "gochecknoinits",
+      "gocognit",
+      "goconst",
+      "gocritic",
+      "gocyclo",
+      "godot",
+      "godox",
+      "gosec",
+      "govet",
+      "iface",
+      "importas",
+      "inamedparam",
+      "ineffassign",
+      "interfacebloat",
+      "lll",
+      "mirror",
+      "misspell",
+      "maintidx",
+      "mnd",
+      "musttag",
+      "nakedret",
+      "nestif",
+      "nilerr",
+      "nilnesserr",
+      "nilnil",
+      "nlreturn",
+      "noctx",
+      "noinlineerr",
+      "nolintlint",
+      "nonamedreturns",
+      "nosprintfhostport",
+      "paralleltest",
+      "predeclared",
+      "promlinter",
+      "reassign",
+      "recvcheck",
+      "sloglint",
+      "staticcheck",
+      "spancheck",
+      "tagalign",
+      "testableexamples",
+      "testifylint",
+      "testpackage",
+      "thelper",
+      "tparallel",
+      "unconvert",
+      "unparam",
+      "unused",
+      "usetesting",
+      "usestdlibvars",
+      "varnamelen",
+      "wastedassign",
+      "whitespace",
+      "wrapcheck",
+      "wsl_v5"
+    ],
+    "settings": {
+      "errcheck": {
+        "check-blank": true
+      },
+      "varnamelen": {
+        "ignore-decls": [
+          "wg *sync.WaitGroup"
+        ]
+      }
+    },
+    "exclusions": {
+      "rules": [
+        {
+          "path": "_test.go",
+          "linters": [
+            "wrapcheck",
+            "funlen",
+            "mnd"
+          ]
+        }
+      ]
+    }
+  },
+  "formatters": {
+    "enable": [
+      "gofmt",
+      "goimports",
+      "gci"
+    ],
+    "settings": {
+      "gci": {
+        "sections": [
+          "standard",
+          "default",
+          "Prefix(github.com/messaging-go)"
+        ]
+      },
+      "goimports": {
+        "local-prefixes": ["github.com/messaging-go"]
+      }
+    }
+  },
+  "run": {
+    "tests": true,
+    "allow-parallel-runners": true
+  }
+}
