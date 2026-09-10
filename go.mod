@@ -1,4 +1,4 @@
-module github.com/messaging-go/integration-template
+module github.com/messaging-go/pubsub
 
 go 1.26.4
 
