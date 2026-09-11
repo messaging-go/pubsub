@@ -61,9 +61,7 @@ jobs:
           go-version-file: go.mod
       - name: Download Go modules
         run: go mod download
-      - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v6
+      - uses: cycjimmy/semantic-release-action@v6
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          semantic_version: 24.2.7
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          BRANCH: ${{ github.ref_name }}
