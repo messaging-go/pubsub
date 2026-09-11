@@ -17,12 +17,12 @@ jobs:
       - uses: cyberhck/action-sync-templates@v0.0.13
         with:
           token: ${{ secrets.GH_TOKEN }}
+          config-path: '.github/.synced-files.json'
           template-repo: 'messaging-go/integration-template'
           # Head branch for the sync PR. `protect synced files` (do-not-change.yaml)
           # keys off this exact value to allow synced files to change only here.
           target-branch: 'automated_sync'
           commit-message: 'chore: sync files from template'
-          config-path: '.github/.synced-files.json'
           pr-body: |
             ## 🔄 Template Sync
 
