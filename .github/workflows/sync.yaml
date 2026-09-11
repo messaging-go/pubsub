@@ -22,6 +22,7 @@ jobs:
           # keys off this exact value to allow synced files to change only here.
           target-branch: 'automated_sync'
           commit-message: 'chore: sync files from template'
+          config-path: '.github/.synced-files.json'
           pr-body: |
             ## 🔄 Template Sync
 
