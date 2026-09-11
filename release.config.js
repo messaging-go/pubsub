@@ -1,5 +1,8 @@
 module.exports = {
-    branches: [{name: 'main'}],
+    branches: [
+        {name: 'main'},
+        {name: '**', prerelease: 'rc'},
+    ],
     verifyConditions: [
         "@semantic-release/github"
     ],
