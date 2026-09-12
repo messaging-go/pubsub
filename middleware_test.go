@@ -78,6 +78,7 @@ func TestNew(t *testing.T) {
 		// populate million message first
 		client, err := pubsub2.NewClient(t.Context(), projectID)
 		require.NoError(t, err)
+
 		const count = 30_000
 		publishMessages(t, client, topic, count)
 		t.Log("published messages, processing next...")
@@ -85,22 +86,28 @@ func TestNew(t *testing.T) {
 		processor := core.New[pubsub2.Message](func(err error) {
 			// do nothing
 		})
-		mw := pubsub.New(client.Subscriber(subscription))
-		processor.AddMiddleware(mw)
+		middleware := pubsub.New(client.Subscriber(subscription))
+		processor.AddMiddleware(middleware)
+
 		done := make(chan struct{}, count)
+
 		go func() {
 			for {
 				if len(done) == count {
-					mw.Stop()
+					middleware.Stop()
 					processor.Stop()
 					time.Sleep(time.Millisecond * 50)
+
 					break
 				}
 			}
 		}()
+
 		startTime := time.Now()
+
 		processor.Run(func(ctx context.Context, item *pubsub2.Message) error {
 			assert.Equal(t, []byte("hello world"), item.Data)
+
 			done <- struct{}{}
 
 			return nil
@@ -111,12 +118,14 @@ func TestNew(t *testing.T) {
 
 func publishMessages(tb testing.TB, client *pubsub2.Client, topic string, count int) {
 	tb.Helper()
+
 	publisher := client.Publisher(topic)
 	for range count {
 		publisher.Publish(tb.Context(), &pubsub2.Message{
 			Data: []byte("hello world"),
 		})
 	}
+
 	publisher.Flush()
 }
 
@@ -145,7 +154,10 @@ func createTopicAndSubscription(tb testing.TB, topic, subscription string) (stri
 		projectID,
 	)
 	require.NoError(tb, err)
-	topicRes, err := client.TopicAdminClient.CreateTopic(tb.Context(), &pubsubpb.Topic{Name: fmt.Sprintf("projects/%s/topics/%s", projectID, topic)})
+	topicRes, err := client.TopicAdminClient.CreateTopic(
+		tb.Context(),
+		&pubsubpb.Topic{Name: fmt.Sprintf("projects/%s/topics/%s", projectID, topic)},
+	)
 	require.NoError(tb, err)
 	subRes, err := client.SubscriptionAdminClient.CreateSubscription(tb.Context(), &pubsubpb.Subscription{
 		Name:  fmt.Sprintf("projects/%s/subscriptions/%s", projectID, subscription),
