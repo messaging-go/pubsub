@@ -1,3 +1,10 @@
 services:
-  dummy: # you should change this according to your need. If you need pubsub, use emulator to start pubsub, etc
-    image: registry.k8s.io/pause:3.9
+  emulator:
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:582.0.0-emulators
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8681 --project=messaging-go
+    ports:
+      - "8681:8681"
+  ui:
+    image: ghcr.io/neoscript/pubsub-emulator-ui:2025.06.08
+    ports:
+      - "8080:80"
