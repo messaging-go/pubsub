@@ -28,6 +28,8 @@ func (h Handler) Process(
 			err := next(ctx, message)
 			if err != nil {
 				message.Nack()
+
+				return
 			}
 
 			message.Ack()
